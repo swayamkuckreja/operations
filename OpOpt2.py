@@ -341,7 +341,7 @@ if __name__ == "__main__":
     # STEP 2: LARGE SCENARIO VISUALIZATION
     # -------------------------------------------------------
     print("\n--- STEP 2: LARGE SCENARIO (n=6, 30x30 grid) ---")
-    large_inst = Instance(n_requests=6, grid_size=30, seed=42)
+    large_inst = Instance(n_requests=4, grid_size=30, seed=42)
     sol, x_vars, y_vars = solve_dapdp(large_inst, verbose=True, time_limit=180)
     
     if sol:
@@ -357,7 +357,7 @@ if __name__ == "__main__":
     
     # CHANGE 1: Grid Size increased to 50 (makes battery life critical)
     # CHANGE 2: Seed set to 42 (guarantees drone-eligible light packages)
-    sens_inst = Instance(n_requests=5, grid_size=50, seed=42) 
+    sens_inst = Instance(n_requests=4, grid_size=50, seed=42)
     
     endurance_values = [20, 30, 40, 50, 60, 80]
     results = []
