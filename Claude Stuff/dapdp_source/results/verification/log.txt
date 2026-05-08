@@ -1,0 +1,51 @@
+
+=== V1: basic feasibility (n=3, 5x5) ===
+Set parameter Username
+Set parameter LicenseID to value 2819930
+Academic license - for non-commercial use only - expires 2027-05-08
+Audit: PASSED
+  note: objective = $0.9118
+  note: truck arcs: 4, drone sorties: 3
+
+=== V2: pickup-before-delivery precedence ===
+Audit: PASSED
+  note: objective = $0.9142
+  note: truck arcs: 7, drone sorties: 0
+  truck route: [0, 1, 2, 3, 6, 5, 4, 7]
+
+=== V3: drone endurance limit ===
+  endurance 60 min -> 2 sorties, z = $4.652
+  endurance  5 min -> 0 sorties, z = $5.341
+Audit: PASSED
+  note: objective = $4.6520
+  note: truck arcs: 7, drone sorties: 2
+Audit: PASSED
+  note: objective = $5.3408
+  note: truck arcs: 9, drone sorties: 0
+
+=== V4: drone payload limit ===
+Audit: PASSED
+  note: objective = $0.7919
+  note: truck arcs: 6, drone sorties: 1
+  drone-served customers: [6]
+
+=== V5: no disconnected sub-tours ===
+Audit: PASSED
+  note: objective = $4.7147
+  note: truck arcs: 11, drone sorties: 2
+  truck path length: 12 nodes; total arcs used: 11
+
+=== V6: DAPDP cost <= PDP cost ===
+  PDP   objective: $4.3161
+  DAPDP objective: $3.0109
+Audit: PASSED
+  note: objective = $3.0109
+  note: truck arcs: 12, drone sorties: 5
+
+=== V7: depot drone delivery forbidden ===
+  no depot launches in solution (as required)
+Audit: PASSED
+  note: objective = $0.6640
+  note: truck arcs: 6, drone sorties: 1
+
+=== verification suite complete ===

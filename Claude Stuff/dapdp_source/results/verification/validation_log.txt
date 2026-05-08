@@ -1,0 +1,3 @@
+Set parameter Username
+Set parameter LicenseID to value 2819930
+Academic license - for non-commercial use only - expires 2027-05-08
