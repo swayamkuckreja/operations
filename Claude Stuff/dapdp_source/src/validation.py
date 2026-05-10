@@ -34,7 +34,7 @@ def main():
     # at n = 10).
     time_limit_per_n = {6: 120.0, 8: 300.0, 10: 600.0}
 
-    for n in [6]:
+    for n in [6, 8, 10]:
         n_seeds = seeds_per_n[n]
         tlim = time_limit_per_n[n]
         for grid in [10.0, 20.0, 30.0]:

@@ -94,7 +94,7 @@ def _make_ensemble() -> List[Instance]:
     """Ensemble of test instances at paper-realistic sizes. Kept modest in
     cardinality because each parameter sweep multiplies the solve count."""
     out: List[Instance] = []
-    for n in [6]:
+    for n in [6, 8]:
         for grid in [10.0, 20.0]:
             for seed in [1, 2, 3]:
                 out.append(generate_instance(n=n, grid_size=grid, seed=seed))
