@@ -1,4 +1,21 @@
-import sys
+#DONT USE THIS
+# 
+# 
+# 
+# 
+# 
+# ITS AN OLD IMPLEMENTATION - NONE OF THIS CODE IS USED FOR THE REPORT
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# import sys
 import math
 import random
 import matplotlib.pyplot as plt
