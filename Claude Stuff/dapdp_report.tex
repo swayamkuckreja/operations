@@ -52,8 +52,11 @@ duration.
 The contributions of this work are:
 \begin{enumerate}
 \item A clean Python/Gurobi implementation of all $37$ constraints of the
-paper (Section~3.2 of the original) plus the optional valid inequalities
-(Section~3.3).
+paper (Section~3.2 of the original) plus two of the three valid-inequality
+families of Section~3.3: the cost-bound epigraph (Prop.~1) and the knapsack
+cuts~(43)--(44). The symmetry-breaking cut~(41)--(42) is omitted because it
+is nonlinear (a product $u^{v}_{i}\,x^{v}_{0i}$) and so not directly
+expressible in the MILP.
 \item A truck-only baseline obtained by restricting the same model with
 $\Cprime{=}\emptyset$, used to compute the saving $\mathit{SPDP} = 1 -
 z_{\dapdp} / z_{\pdp}$.
@@ -114,10 +117,86 @@ sequence.
 (c'_{ij}{+}c'_{jk}) y^{v}_{ijk}$.
 \end{itemize}
 
-The model's $37$ constraints are stated in the paper, equations~(2)--(37); a
-brief catalogue is given in Table~\ref{tab:constraints}. We refer the reader
-to the paper for the full algebra and only highlight the non-trivial
-implementation decisions in the next section.
+\paragraph{Mathematical model.}
+The implemented MILP is given below in the paper's equation numbering, with
+the deviations of \S\ref{sec:interpretations} already folded in (the
+$-M$ sign in~(28), the epigraph objective~(38)--(39), the depot-launch ban
+in~(26), and the elision of~(10) and~(35)). Two big-$M$ constants are used:
+$M_{\mathrm{pos}}=2n{+}2$ in the position constraints and
+$M_t=T_{\max}+10$\,h in the time constraints. The drone sortie set is
+$\mathcal P=\{(i,j,k):i\ne 0,\;j\in\Cprime,\;k\in\Nplus,\;i,j,k\text{
+distinct}\}$, pre-filtered for endurance.
+{\footnotesize
+\allowdisplaybreaks
+\begin{align}
+& \min~ \eta \tag{38}\\
+& \eta \ge \sum_{v\in\mathcal V}\Big(\sum_{(i,j)\in\mathcal A} c_{ij}x^{v}_{ij}
+   +\sum_{i\in\NO}\sum_{j\in C}\sum_{k\in\Nplus}(c'_{ij}+c'_{jk})\,y^{v}_{ijk}\Big) \tag{39}\\
+& \sum_{v}\Big(\sum_{i\in\NO:i\ne j}x^{v}_{ij}
+   +\sum_{i\in\NO:i\ne j}\sum_{k\in\Nplus}y^{v}_{ijk}\Big)=1,
+   \quad \forall j\in C \tag{2}\\
+& \sum_{j\in\Nplus}x^{v}_{0j}\le 1,\quad
+  \sum_{i\in\NO}x^{v}_{i,2n+1}\le 1,
+   \qquad \forall v \tag{3,4}\\
+& 1+u^{v}_{i}-u^{v}_{j}\le(1-x^{v}_{ij})\,M_{\mathrm{pos}},
+   \quad \forall i\in C,\,j\in\Nplus\!\setminus\!\{i\},\,v \tag{5}\\
+& \sum_{i\in\NO:i\ne j}x^{v}_{ij}=\sum_{k\in\Nplus:k\ne j}x^{v}_{jk},
+   \quad \forall j\in C,\,v \tag{6}\\
+& \sum_{j\in C:j\ne i}\sum_{k\in\Nplus}y^{v}_{ijk}\le 1,\;\;\forall i\in\NO;\quad
+  \sum_{i\in\NO:i\ne k}\sum_{j\in C}y^{v}_{ijk}\le 1,\;\;\forall k\in\Nplus \tag{7,8}\\
+& 2y^{v}_{ijk}\le \textstyle\sum_{h\in\NO:h\ne i}x^{v}_{hi}
+   +\sum_{l\in\NO:l\ne k}x^{v}_{lk},
+   \quad \forall (i,j,k)\in\mathcal P,\,v
+   \;\;\text{(launch term}\equiv 1\text{ if }i{=}0) \tag{9}\\
+& u^{v}_{k}-u^{v}_{i}\ge 1-M_{\mathrm{pos}}\big(1-\textstyle\sum_{j}y^{v}_{ijk}\big),
+   \quad \forall i\in C,\,k\in\Nplus\!\setminus\!\{i\},\,v \tag{11}\\
+& t'^{\,v}_{i}\ge t^{v}_{i}-M_t\big(1-\textstyle\sum_{j,k}y^{v}_{ijk}\big),\quad
+  t'^{\,v}_{i}\le t^{v}_{i}+M_t\big(1-\textstyle\sum_{j,k}y^{v}_{ijk}\big),
+   \;\; \forall i\in C,\,v \tag{12,13}\\
+& t'^{\,v}_{k}\ge t^{v}_{k}-M_t\big(1-\textstyle\sum_{i,j}y^{v}_{ijk}\big),\quad
+  t'^{\,v}_{k}\le t^{v}_{k}+M_t\big(1-\textstyle\sum_{i,j}y^{v}_{ijk}\big),
+   \;\; \forall k\in C,\,v \tag{14,15}\\
+& t^{v}_{k}\ge t^{v}_{h}+\tau_{hk}+d_{h}
+   +s_{L}\!\textstyle\sum_{l,m}y^{v}_{klm}
+   +s_{R}\!\textstyle\sum_{i,j}y^{v}_{ijk}-M_t(1-x^{v}_{hk}),
+   \;\; \forall h\in\NO,\,k\in\Nplus\!\setminus\!\{h\},\,v \tag{16}\\
+& t'^{\,v}_{j}\ge t'^{\,v}_{i}+\tau'_{ij}-M_t\big(1-\textstyle\sum_{k}y^{v}_{ijk}\big),
+   \quad \forall j\in\Cprime,\,i\in\NO\!\setminus\!\{j\},\,v \tag{17}\\
+& t'^{\,v}_{k}\ge t'^{\,v}_{j}+\tau'_{jk}+d'_{j}+s_{R}
+   -M_t\big(1-\textstyle\sum_{i}y^{v}_{ijk}\big),
+   \quad \forall j\in\Cprime,\,k\in\Nplus\!\setminus\!\{j\},\,v \tag{18}\\
+& t'^{\,v}_{k}-(t'^{\,v}_{j}-\tau'_{ij})\le e+M_t(1-y^{v}_{ijk}),
+   \quad \forall (i,j,k)\in\mathcal P,\,v \tag{19}\\
+& u^{v}_{i}-u^{v}_{j}\ge 1-M_{\mathrm{pos}}\,p^{v}_{ij},\quad
+  u^{v}_{i}-u^{v}_{j}\le -1+(1-p^{v}_{ij})\,M_{\mathrm{pos}},
+   \;\; \forall i,j\in C:i\ne j,\,v \tag{20,21}\\
+& p^{v}_{ij}+p^{v}_{ji}=1,\quad \forall i,j\in C:i<j,\,v \tag{22}\\
+& t'^{\,v}_{l}\ge t'^{\,v}_{k}-M_t\big(3-\textstyle\sum_{j}y^{v}_{ijk}
+   -\sum_{m,n}y^{v}_{lmn}-p^{v}_{il}\big),
+   \;\; \forall i\in\NO,\,k\in\Nplus\!\setminus\!\{i\},\,l\in C\!\setminus\!\{i,k\},\,v \tag{23}\\
+& x^{v}_{0,2n+1}=0,\quad \forall v \tag{24}\\
+& \sum_{j\in\Nplus:j\ne i}x^{v}_{ij}=\sum_{j\in\Nplus:j\ne n+i}x^{v}_{n+i,j}
+   +\sum_{l\in\NO}\sum_{k\in\Nplus}y^{v}_{l,n+i,k},
+   \quad \forall i\in\Phi^{+},\,v \tag{25}\\
+& u^{v}_{i}-u^{v}_{j-n}\ge 1-M_{\mathrm{pos}}(1-y^{v}_{ijk}),
+   \;\; \forall (i,j,k)\in\mathcal P,\,j\in\Phi^{-};\qquad y^{v}_{0jk}=0 \tag{26}\\
+& t^{v}_{n+i}\ge t^{v}_{i}+\tau_{i,n+i}+d_{i},
+   \quad \forall i\in\Phi^{+},\,v \tag{27}\\
+& w^{v}_{j}\ge w^{v}_{i}+q_{j}
+   +\!\!\sum_{(j,m,k)\in\mathcal P}\!\! q_{m}\,y^{v}_{jmk}-Q(1-x^{v}_{ij}),
+   \;\; \forall i\in\NO,\,j\in C:i\ne j,\,v \tag{28}\\
+& t^{v}_{0}=t'^{\,v}_{0}=0;\quad
+  t^{v}_{2n+1}\le T_{\max},\;\; t'^{\,v}_{2n+1}\le T_{\max},
+   \quad \forall v \tag{31--34}\\
+& 1\le u^{v}_{i}\le 2n{+}2,\quad 0\le w^{v}_{i}\le Q \tag{36,37}\\
+& x^{v}_{ij}+\textstyle\sum_{k\in\Nplus}y^{v}_{ijk}\le 1,
+   \quad \forall i\in\NO,\,j\in\Cprime:i\ne j,\,v \tag{43}\\
+& x^{v}_{ij}+x^{v}_{jk}+x^{v}_{ik}+y^{v}_{ijk}\le 2,
+   \quad \forall (i,j,k)\in\mathcal P,\,v \tag{44}
+\end{align}}%
+Variables are binary ($x,y,p$) or non-negative continuous ($t,t',w,\eta$),
+with $u$ integer. Table~\ref{tab:constraints} summarises the role of each
+group; the non-obvious implementation choices are detailed next.
 
 \begin{table}[t]
 \centering
@@ -149,7 +228,7 @@ Eqs.        & Purpose                                          & Implementation 
 (31)--(34)  & Time bounds, $T_{\max}$                          & --- \\
 (35)        & $p^{v}_{0j}=1$                                   & omitted; see \S\ref{sec:interpretations} \\
 (36)--(37)  & Bounds on $u, w$                                 & encoded in variable bounds \\
-(43)--(44)  & Valid inequalities (Section 3.3)                 & enabled by default \\
+(43)--(44)  & Knapsack valid inequalities (Section 3.3)        & on; symmetry cut (41) omitted (nonlinear) \\
 \bottomrule
 \end{tabular}
 \end{table}
