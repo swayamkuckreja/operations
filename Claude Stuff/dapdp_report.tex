@@ -25,8 +25,8 @@
 \title{Operations Optimisation Assignment\\
 \large Reproducing the MILP for the Drone-Assisted Pickup and Delivery Problem\\
 {\small Mulumba \& Diabat, \emph{Transp. Res. E} 181 (2024) 103377}}
-\author{Kai\\TU Delft Aerospace Engineering}
-\date{May 2026}
+\author{Rohit Roy Chowdhury, Swayam Kuckreja (5726549), Kai Murtagh (5685095)\\TU Delft Aerospace Engineering}
+\date{July 2026}
 
 \newcommand{\R}{\mathbb{R}}
 \newcommand{\Nplus}{N^{+}}
@@ -61,9 +61,13 @@ z_{\dapdp} / z_{\pdp}$.
 covering each major class of constraint.
 \item A sensitivity analysis on drone endurance, drone speed and the drone
 cost factor $\alpha$.
-\item A small-scale validation that recovers the same order of saving (mean
-SPDP $\approx$ 25\%) reported in the paper, run on the paper's instance
-sizes $n \in \{6, 8, 10\}$.
+\item A small-scale validation on the paper's instance sizes
+$n \in \{6, 8, 10\}$, which reproduces the qualitative finding that the drone
+yields positive cost savings. The mean SPDP across these small cells is
+$\approx 14\%$; the paper's headline $\approx 25\%$ is an average over its
+\emph{large}-scale set (up to $n{=}150$), and our smaller, grid-dependent
+savings are consistent with the paper's own small-instance rows
+(Table~A.6).
 \end{enumerate}
 
 The paper contains a small number of typographic ambiguities
@@ -345,9 +349,10 @@ in the optimum has $i=0$.
 \subsection{Audit summary}
 \begin{table}[h]
 \centering
-\caption{Verification suite results. Values for V5/V6 are produced by
-re-running \texttt{verification.py} with the academic licence; placeholders
-below are to be replaced by the printed solver output.}
+\caption{Verification suite results, produced by \texttt{verification.py}
+with the academic licence. For V6 the $z^\star$ column reports the DAPDP
+optimum; the truck-only baseline is $z_{\pdp}=\$4.316$, giving a saving
+$S_{\pdp}=1-3.011/4.316\approx 30\%$.}
 \label{tab:verification}
 \small
 \begin{tabular}{@{}llrrl@{}}
@@ -359,8 +364,8 @@ V2 & pickup-precedence (truck only)    & $0.914$ & $0.5$ & passed \\
 V3a & endurance 60 min                 & $4.652$ & $0.6$ & passed (2 sorties) \\
 V3b & endurance 5 min                  & $5.341$ & $0.6$ & passed (0 sorties) \\
 V4 & drone payload                     & $0.792$ & $0.4$ & passed (drone serves only $\{6\}$) \\
-V5 & no sub-tours, $n{=}6$             & TBD     & TBD   & passed (single path) \\
-V6 & DAPDP $\le$ PDP, $n{=}8$          & TBD     & TBD   & passed \\
+V5 & no sub-tours, $n{=}6$             & $4.715$ & $8.0$ & passed (single path) \\
+V6 & DAPDP $\le$ PDP, $n{=}8$          & $3.011$ & $218.0$ & passed ($S_{\pdp}\approx 30\%$) \\
 V7 & no depot-launch deliveries        & $0.664$ & $0.4$ & passed (no $y_{0jk}{=}1$) \\
 \bottomrule
 \end{tabular}
@@ -431,26 +436,43 @@ $n{=}8$, $2$ at $n{=}10$); the same Gurobi parameters are used throughout.
 
 \begin{table}[h]
 \centering
-\caption{Mean SPDP and runtime per $(n, \text{grid})$ cell. Re-run
-\texttt{validation.py} after solver completion to populate.}
+\caption{Mean SPDP and runtime per $(n, \text{grid})$ cell, from
+\texttt{validation.py} ($5$ seeds at $n{=}6$, $3$ at $n{=}8$, $2$ at
+$n{=}10$). Runtimes include model build; cells at $n{=}10$ reach the
+$600$\,s solve limit (see text).}
 \label{tab:validation}
 \small
 \begin{tabular}{@{}rrrrr@{}}
 \toprule
 $n$ & grid (mi) & mean SPDP (\%) & std (\%) & mean runtime (s) \\
 \midrule
-6  & 10 & TBD & TBD & TBD \\
-6  & 20 & TBD & TBD & TBD \\
-6  & 30 & TBD & TBD & TBD \\
-8  & 10 & TBD & TBD & TBD \\
-8  & 20 & TBD & TBD & TBD \\
-8  & 30 & TBD & TBD & TBD \\
-10 & 10 & TBD & TBD & TBD \\
-10 & 20 & TBD & TBD & TBD \\
-10 & 30 & TBD & TBD & TBD \\
+6  & 10 & $22.27$ & $6.94$ & $3.5$ \\
+6  & 20 & $20.45$ & $5.68$ & $3.4$ \\
+6  & 30 & $9.47$  & $5.31$ & $1.3$ \\
+8  & 10 & $20.67$ & $8.41$ & $174.6$ \\
+8  & 20 & $17.56$ & $10.42$ & $184.9$ \\
+8  & 30 & $11.93$ & $1.59$ & $127.4$ \\
+10 & 10 & $11.73$ & $9.39$ & $656.0$ \\
+10 & 20 & $-5.09$ & $12.77$ & $959.7$ \\
+10 & 30 & $16.15$ & $3.14$ & $591.0$ \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+Across all nine cells the mean saving is $\approx 14\%$, with the largest
+savings on the denser $10$\,mile grids where more eligible deliveries fall
+within drone range. Two caveats apply at $n{=}10$. First, these solves reach
+the $600$\,s time limit, so the reported objectives are best incumbents
+rather than certified optima. Second, the $(n{=}10,\text{grid}{=}20)$ cell
+shows a \emph{negative} mean SPDP ($-5.1\%$): because the \dapdp{} strictly
+generalises the \pdp{} (the drone is optional), the true optimum can never
+satisfy $z_{\dapdp}>z_{\pdp}$, so a negative saving is the signature of a
+\dapdp{} solve that has not converged within the time limit and returned an
+incumbent worse than its own \pdp{} baseline. This is exactly the
+non-convergence case flagged in the assignment guidelines; it is resolved by
+raising the time limit (or tightening the MIP gap) at $n{=}10$, not by any
+change to the model, whose $z_{\dapdp}\le z_{\pdp}$ invariant is verified
+directly in scenario~V6.
 
 \section{Conclusions}
 
